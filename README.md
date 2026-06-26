@@ -42,3 +42,10 @@ Write-Host "Done!"
 ```powershell
 Invoke-WebRequest -Uri "https://zenodo.org/records/4003545/files/Task027_ACDC.zip?download=1" -OutFile "C:\Users\T.Hung\Task027_ACDC.zip"
 ```
+
+Cài model vào nnU-Net v1
+
+```powershell
+nnUNet_install_pretrained_model_from_zip "C:\Users\T.Hung\Task027_ACDC.zip"
+```
+
