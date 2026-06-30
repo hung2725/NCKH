@@ -90,16 +90,27 @@ def find_lambda(cal_true: np.ndarray,
     # Grid cac gia tri lambda
     lambdas = np.linspace(0, max_lam, n_grid)
 
-    # DUNG formula tu Angelopoulos et al. (2024) Theorem 1:
-    #   R_hat(lambda) = (n_miscov + 1) / (n + 1) <= alpha
-    #   => n_miscov <= alpha * (n + 1) - 1
-    max_allowed = alpha * (n + 1) - 1   # so miscoverage toi da cho phep
-    valid = max_allowed >= 0            # can n >= ceil(1/alpha) - 1
+    # DUNG formula tu Angelopoulos et al. (2024) Theorem 2.1:
+    #   R_hat(lambda) = (1/n) * sum(L_i) <= alpha - (B - alpha) / n
+    # Voi loss la miscoverage (indicator function), B = max loss = 1
+    B = 1.0
+    risk_threshold = alpha - (B - alpha) / n
+    
+    # Nhom nho khong the dam bao guarantee: threshold < 0 hoac = 0 (khi so luong qua nho)
+    # n phai du lon de (B - alpha) / n < alpha => n > (B - alpha) / alpha
+    valid = risk_threshold >= 0
 
     if not valid:
         # Nhom qua nho, khong the dam bao guarantee -> tra ve max_lam (conservative)
         best_lam = max_lam
+        max_allowed = -1
     else:
+        # Chuyen risk_threshold ve so miscoverage toi da duoc phep
+        # R_hat = n_miscov / n <= risk_threshold
+        # => n_miscov <= risk_threshold * n
+        max_allowed_float = risk_threshold * n
+        max_allowed = int(np.floor(max_allowed_float))
+        
         best_lam = max_lam  # default conservative
         for lam in lambdas:
             n_miscov = int(np.sum(scores > lam))

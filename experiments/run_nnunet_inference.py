@@ -105,11 +105,8 @@ def prepare_input_data(limit=None):
     print(f"Prepared {count} images in {INPUT_DIR}")
 
 
-def run_inference(model="2d", tta=False):
-    """
-    Chạy nnUNet_predict để dự đoán phân đoạn.
-    """
-    print(f"Running nnU-Net inference using {model} model (TTA={tta})...")
+def run_inference(model="2d", tta=False, save_npz=False):
+    print(f"Running nnU-Net inference using {model} model (TTA={tta}, save_npz={save_npz})...")
     
     # Tìm model folder
     model_folder = NNUNET_DATA_DIR / "RESULTS_FOLDER" / "nnUNet" / model / "Task027_ACDC" / "nnUNetTrainerV2__nnUNetPlansv2.1"
@@ -123,7 +120,7 @@ def run_inference(model="2d", tta=False):
         input_folder=str(INPUT_DIR),
         output_folder=str(OUTPUT_DIR),
         folds=None,
-        save_npz=False,
+        save_npz=save_npz,
         num_threads_preprocessing=2,
         num_threads_nifti_save=2,
         lowres_segmentations=None,
@@ -142,7 +139,8 @@ if __name__ == "__main__":
     parser.add_argument("--limit", type=int, default=None, help="Limit number of patients to predict")
     parser.add_argument("--model", type=str, default="2d", choices=["2d", "3d_fullres"], help="nnU-Net model mode")
     parser.add_argument("--tta", action="store_true", help="Enable test-time augmentation (slower)")
+    parser.add_argument("--save_npz", action="store_true", help="Save softmax probabilities as .npz (required for COMPASS)")
     args = parser.parse_args()
 
-    prepare_input_data(limit=args.limit)
-    run_inference(model=args.model, tta=args.tta)
+    # prepare_input_data(limit=args.limit) # Already prepared in nnunet_input
+    run_inference(model=args.model, tta=args.tta, save_npz=args.save_npz)

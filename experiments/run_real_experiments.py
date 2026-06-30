@@ -19,9 +19,9 @@ from src.conformal.mondrian import (
 WORKSPACE_DIR = Path("D:/Hoc_Tap/NCKH")
 CSV_PATH = WORKSPACE_DIR / "results/acdc_metrics.csv"
 FIG_DIR = WORKSPACE_DIR / "results/figures"
-ALPHA = 0.1  # Target coverage = 90%
+ALPHA = 0.1 
 N_TRIALS = 100
-CAL_PROP = 0.6  # 60% calibration, 40% test
+CAL_PROP = 0.6 
 
 METRICS = [
     'LV_EDV', 'LV_ESV', 'LV_EF',

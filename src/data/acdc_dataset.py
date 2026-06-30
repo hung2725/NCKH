@@ -1,14 +1,3 @@
-"""
-src/data/acdc_dataset.py
-Load ACDC dataset va tinh clinical metrics tu ground truth masks.
-
-Label convention:
-    0 = Background
-    1 = Right Ventricle (RV)
-    2 = Myocardium (Myo)
-    3 = Left Ventricle (LV)
-"""
-
 import numpy as np
 import nibabel as nib
 from pathlib import Path
