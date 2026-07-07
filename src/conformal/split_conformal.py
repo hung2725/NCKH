@@ -1,19 +1,3 @@
-"""
-src/conformal/split_conformal.py
-
-Split Conformal Prediction cho clinical metrics.
-
-Theory (Vovk et al. 2005, Angelopoulos & Bates 2022):
-    Given calibration scores s_1, ..., s_n and alpha in (0,1):
-
-    q = ceil((n+1)(1-alpha)) / n  quantile of scores
-
-    Prediction interval for new sample: [y_hat - q, y_hat + q]
-
-    Guarantee: P(y_new in interval) >= 1 - alpha
-    (distribution-free, valid for any exchangeable data)
-"""
-
 import numpy as np
 from typing import Tuple
 

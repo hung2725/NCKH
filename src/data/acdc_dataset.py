@@ -62,7 +62,7 @@ class ACDCDataset:
     def load_patient(self, patient_dir):
         pid      = patient_dir.name
         info_cfg = patient_dir / 'Info.cfg'
-        if not info_cfg.exists():
+        if not info_cfg.exists(): 
             return None
 
         info     = parse_info_cfg(str(info_cfg))
