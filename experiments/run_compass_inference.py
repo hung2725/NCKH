@@ -122,9 +122,8 @@ def run_compass_experiment():
     df = pd.DataFrame(data)
     print(f"Loaded {len(df)} samples.")
     
-    # 5-fold cross validation de danh gia COMPASS
     kf = KFold(n_splits=5, shuffle=True, random_state=42)
-    alpha = 0.1  # Target 90% coverage
+    alpha = 0.1
     
     results = []
     
@@ -165,10 +164,8 @@ def run_compass_experiment():
             # Split CP baseline for comparison
             # Split CP tinh error = |y_true - y_pred|
             cal_errors = (train_data["y_true"] - train_data["y_pred"]).abs().values
-            n_cal = len(cal_errors)
-            q_level = np.ceil((n_cal + 1) * (1 - alpha)) / n_cal
-            q_level = np.clip(q_level, 0, 1)
-            q_hat = np.quantile(cal_errors, q_level, method='higher')
+            from src.conformal.split_conformal import conformal_quantile
+            q_hat = conformal_quantile(cal_errors, alpha)
             
             scp_lower = max(0, row["y_pred"] - q_hat)
             scp_upper = row["y_pred"] + q_hat

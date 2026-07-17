@@ -63,16 +63,11 @@ def compass_l_score(probs: torch.Tensor, y_true: float, target_class: int, metri
 def calibrate_compass(scores: Union[np.ndarray, list], alpha: float) -> float:
     """
     Calibrate COMPASS nonconformity scores using split conformal prediction.
+    Uses the conservative quantile from split_conformal.py.
     """
+    from src.conformal.split_conformal import conformal_quantile
     scores_arr = np.array(scores)
-    n = len(scores_arr)
-    if n == 0:
-        return float('inf')
-    
-    level = np.ceil((n + 1) * (1 - alpha)) / n
-    level = np.clip(level, 0, 1)
-    
-    return float(np.quantile(scores_arr, level, method='higher'))
+    return conformal_quantile(scores_arr, alpha)
 
 def predict_interval_compass(probs: torch.Tensor, beta_hat: float, target_class: int, metric_fn: Callable) -> Tuple[float, float]:
     """

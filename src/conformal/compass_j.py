@@ -29,7 +29,7 @@ Complexity: O(n_cal * steps) per fold
 
 import numpy as np
 import torch
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Optional
 from sklearn.decomposition import TruncatedSVD
 
 
@@ -103,6 +103,104 @@ def compute_pca_subspace(
     svd = TruncatedSVD(n_components=n_components, random_state=42)
     svd.fit(jacobians)
     return svd.components_   # (n_components, D_flat)
+
+
+def project_jacobian_to_subspace(
+    jacobian: torch.Tensor,
+    V_L: np.ndarray,
+) -> torch.Tensor:
+    """
+    Project 1 Jacobian len shared PCA subspace → perturbation direction.
+
+    direction = V_L^T @ V_L @ J_flat
+    (project len subspace roi reconstruct)
+
+    Args:
+        jacobian : (C, H, W, D) Jacobian tensor tren GPU.
+        V_L      : (n_components, D_flat) PCA components tu calibration.
+
+    Returns:
+        direction: (C, H, W, D) tensor, cung device voi jacobian.
+    """
+    shape = jacobian.shape
+    J_flat = jacobian.flatten().cpu().numpy()
+
+    # Project: coeffs @ V_L = (V_L @ J_flat) @ V_L
+    coeffs = V_L @ J_flat                       # (n_components,)
+    recon = coeffs @ V_L                        # (D_flat,) — projected
+
+    direction = torch.tensor(
+        recon.reshape(shape),
+        dtype=jacobian.dtype,
+        device=jacobian.device,
+    )
+    return direction
+
+
+def compute_shared_directions(
+    cal_probs: list,
+    target_class: int,
+    voxel_vols: list,
+    n_components: int = 5,
+) -> Tuple[Optional[np.ndarray], list]:
+    """
+    Tinh shared PCA subspace tu calibration Jacobians
+    VA project tung sample len subspace do.
+
+    Neu cac sample co shape khac nhau → fallback ve per-sample direction.
+
+    Args:
+        cal_probs    : list cac torch.Tensor (C, H, W, D).
+        target_class : class index.
+        voxel_vols   : list voxel volumes (mL).
+        n_components : so PCA components.
+
+    Returns:
+        V_L        : (n_components, D_flat) shared subspace, hoac None neu fallback.
+        directions : list cac torch.Tensor (C, H, W, D) da project + normalize.
+    """
+    # Buoc 1: Tinh Jacobians
+    jacobians = []
+    shapes = set()
+    for i, probs in enumerate(cal_probs):
+        J = compute_volume_jacobian(probs, target_class, float(voxel_vols[i]))
+        jacobians.append(J)
+        shapes.add(tuple(J.shape))
+
+    # Kiem tra shape consistency
+    if len(shapes) > 1:
+        print(f"  [COMPASS-J] Shapes differ across samples ({len(shapes)} unique). "
+              f"Falling back to per-sample Jacobian directions (no shared PCA).")
+        # Fallback: per-sample directions (normalized)
+        directions = []
+        for J in jacobians:
+            abs_max = J.abs().max()
+            if abs_max > 1e-8:
+                d = J / abs_max
+            else:
+                d = J
+            directions.append(d)
+        return None, directions
+
+    shape0 = jacobians[0].shape
+
+    # Buoc 2: Flatten + stack
+    flat_jacs = [J.flatten().cpu().numpy() for J in jacobians]
+    X = np.stack(flat_jacs, axis=0)  # (n_cal, D_flat)
+
+    # Buoc 3: PCA
+    V_L = compute_pca_subspace(X, n_components=n_components)
+
+    # Buoc 4: Project + normalize
+    directions = []
+    for J in jacobians:
+        d = project_jacobian_to_subspace(J, V_L)
+        abs_max = d.abs().max()
+        if abs_max > 1e-8:
+            d = d / abs_max
+        directions.append(d)
+
+    return V_L, directions
 
 
 # ─────────────────────────────────────────────
@@ -219,26 +317,12 @@ def calibrate_compass_j(
     alpha: float,
 ) -> float:
     """
-    Calibrate COMPASS-J dùng split conformal quantile.
-
-    Dùng binary search quantile chính xác thay vì grid search.
-
-    Args:
-        scores : Nonconformity scores từ tập calibration.
-        alpha  : Target miscoverage rate (e.g., 0.1 for 90% coverage).
-
-    Returns:
-        beta_hat : Calibrated threshold.
+    Calibrate COMPASS-J dung split conformal quantile.
+    Uses the conservative quantile from split_conformal.py.
     """
+    from src.conformal.split_conformal import conformal_quantile
     scores = np.asarray(scores, dtype=float)
-    n = len(scores)
-    if n == 0:
-        return float('inf')
-
-    level = np.ceil((n + 1) * (1 - alpha)) / n
-    level = np.clip(level, 0, 1)
-
-    return float(np.quantile(scores, level, method='higher'))
+    return conformal_quantile(scores, alpha)
 
 
 # ─────────────────────────────────────────────

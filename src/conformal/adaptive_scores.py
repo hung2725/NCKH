@@ -134,11 +134,10 @@ def calibrate_normalized(
     cal_sigmas = np.asarray(cal_sigmas, dtype=float)
 
     scores = np.abs(cal_true - cal_pred) / np.maximum(cal_sigmas, 1e-8)
+    n      = len(scores)
 
-    n     = len(scores)
-    level = np.ceil((n + 1) * (1 - alpha)) / n
-    level = np.clip(level, 0, 1)
-    q_hat = float(np.quantile(scores, level, method='higher'))
+    from src.conformal.split_conformal import conformal_quantile
+    q_hat = conformal_quantile(scores, alpha)
 
     return {
         'q_hat'   : q_hat,

@@ -16,7 +16,12 @@ def conformal_quantile(scores: np.ndarray, alpha: float) -> float:
     n = len(scores)
     if n == 0:
         return float('inf')
-    level = np.ceil((n + 1) * (1 - alpha)) / n
+    # Conservative correction: alpha_cal = alpha - 1/(n+1)
+    # Ensures guarantee holds more robustly, especially for small n.
+    # For large n, alpha_cal ~ alpha (correction -> 0).
+    # Reference: Vovk, Gammerman, Shafer (2005); Angelopoulos & Bates (2023)
+    alpha_cal = max(0.0, alpha - 1.0 / (n + 1))
+    level = np.ceil((n + 1) * (1 - alpha_cal)) / n
     level = np.clip(level, 0, 1)
     return float(np.quantile(scores, level, method='higher'))
 
