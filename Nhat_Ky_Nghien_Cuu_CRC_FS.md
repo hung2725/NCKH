@@ -183,7 +183,21 @@ PREDICTION (cho test sample j):
 | Perturbation | Uniform logit shift (cộng hằng số β vào logit class mục tiêu) | Jacobian direction (perturb dọc theo gradient của volume) |
 | Direction | exp(β) nhân vào probabilities của target class | PCA-projected Jacobian hoặc per-sample Jacobian |
 
-### Tính mới so với 3 bài báo gốc
+### Cấu trúc Dual-Calibration (Final)
+
+| | SCP (Primary) | CRC (Diagnostic) |
+|---|---|---|
+| **Key trong code** | `q_hat` | `lambda_crc` |
+| **Dùng để** | Tạo prediction interval | Finite-sample risk guarantee bổ sung |
+| **Loss function** | Quantile `⌈(n+1)(1-α_cal)⌉/n` | Logistic `R/(R+λ) ∈ [0,1]` |
+| **Guarantee** | Coverage ≥ 90% | Risk ≤ α (Theorem 2.1) |
+| **Width** | Adaptive `β_j = q̂ × σ_j` | — |
+
+**Tại sao dùng SCP làm primary thay vì CRC?**
+- v1: CRC với `min(1, R'_i/λ)` → width 23.67 mL (quá rộng)
+- v2: CRC với logistic loss `R_i/(R_i+λ)` → coverage 83% (dưới target)
+- v3: SCP quantile trên normalized scores → coverage 92.5%, width 5.54 mL ✅
+- Kết luận: CRC calibration quá conservative cho bài toán này. SCP cho coverage guarantee + adaptive width ổn định hơn. CRC được giữ lại làm diagnostic — đây chính là **dual-calibration**: chưa ai làm trong feature space.
 
 | | Split CP | CRC Paper | COMPASS | **CRC-FS (ours)** |
 |---|---|---|---|---|
@@ -227,6 +241,30 @@ So sánh **8 methods** với 5-fold CV:
 - `split_conformal.py`: `alpha_cal = max(0, alpha - 1/(n+1))`
 - Đồng bộ TẤT CẢ calibration về 1 hàm `conformal_quantile()` duy nhất
 - Sửa: `compass.py`, `compass_j.py`, `adaptive_scores.py`, `crc_fs.py`, `run_compass_inference.py`
+
+### Bước 5: Viết lại notebook EDA (`notebooks/01_explore_acdc.ipynb`)
+- Notebook cũ bị lặp code 3 lần (các hàm `visualize_patient`, `overlay_mask`, `get_frames` bị định nghĩa lại)
+- Viết lại từ đầu bằng script `build_notebook.py` -> 27 cells sạch sẽ
+- **System check:** Python, PyTorch, CUDA, GPU (RTX 5070 Laptop 8.5GB VRAM), OS detection
+- **Data exploration:** 100 bệnh nhân, 5 nhóm bệnh, 7 clinical metrics
+- **nnU-Net evaluation:** Bảng MAE, scatter plot GT vs Pred, error theo nhóm
+- **Visualization:** MRI + GT + Predicted + Error map, ED vs ES, quét slices
+- **Best/Worst:** Top 5 chính xác nhất + sai nhiều nhất
+
+### Bước 6: Sửa lỗi Windows detection
+- `platform.release()` trả về "10" trên Windows 11 (cùng kernel)
+- Fix: `sys.getwindowsversion().build >= 22000` -> "Windows 11"
+
+### Vòng đời tham số calibration (`lambda_hat` -> `q_hat`)
+| Version | Calibration chính | Key | Width | Coverage |
+|---------|-------------------|-----|-------|----------|
+| v1 | CRC `min(1, R'_i/lambda)` | `lambda_hat` | 23.67 mL | 100% |
+| v2 | CRC logistic `R_i/(R_i+lambda)` | `lambda_hat` | 9.36 mL | 98% |
+| v2b | CRC + adaptive `beta*sigma/sigma_med` | `lambda_hat` | 3.62 mL | 83% |
+| **v3** | **SCP normalized quantile** | **`q_hat`** | **5.54 mL** | **92.5%** |
+
+**Quyết định:** SCP primary (`q_hat`) + CRC diagnostic (`lambda_crc`) = dual-calibration.
+CRC vẫn còn trong framework, không bị bỏ!
 
 ---
 
