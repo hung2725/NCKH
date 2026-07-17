@@ -1,9 +1,8 @@
+**Ngày:**  
+**Dự án:** NCKH — Tối ưu hóa độ tin cậy cho phân đoạn ảnh y tế  
+**Dataset:** ACDC (100 bệnh nhân, 200 frames, 5 nhóm bệnh) đang test trước data này  
+**Người thực hiện:** T.Hung  
 
-**Ngày:** 
-**Dự án:** NCKH — Tối ưu hóa độ tin cậy cho phân đoạn ảnh y tế
-**Dataset:** ACDC (100 bệnh nhân, 200 frames, 5 nhóm bệnh) đang test trước data này
-**Người thực hiện:** T.Hung
-**Trợ lý nghiên cứu:** Claude Code (Anthropic)
 
 ---
 
