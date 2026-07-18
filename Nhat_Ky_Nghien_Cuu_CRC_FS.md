@@ -659,11 +659,3 @@ python experiments/run_crc_fs_experiment.py
 15. Badjie et al. — *Semantic Segmentation with Conformal Risk Guarantees* (AEiC 2026)
 16. Loaiza-Ganem et al. — *Conf-Gen: Conformal for Generative Models* (ICML 2026)
 
-### Tài liệu nền tảng
-17. Vovk, Gammerman, Shafer — *Algorithmic Learning in a Random World* (2005)
-18. Lei et al. — *Distribution-Free Predictive Inference for Regression* (2018)
-
----
-
-*Nhật ký được tạo bởi Claude Code (Anthropic) — 18/07/2026*
-*Toàn bộ nội dung trò chuyện giữa T.Hung và Claude Code trong phiên làm việc ngày 18/07/2026*
