@@ -417,9 +417,6 @@ Split CP tăng từ 89.5% → 91.0% nhờ conservative quantile!
 
 ## 10. Tìm Kiếm Tài Liệu Tham Khảo 2025-2026
 
-### Người dùng yêu cầu
-> "Ê mà tôi thấy bạn tham khảo những bài báo rất cũ rồi á. Tôi muốn là tìm hiểu các bài báo trong file Topic1_Conformal_Risk_Control và các bài báo liên quan tới bài tôi đang làm phải trong năm 2026 cơ"
-
 ### Phương pháp tìm kiếm
 - Web search: "conformal prediction medical image segmentation 2025 2026"
 - Web search: "conformal risk control feature space deep learning 2025 2026"
