@@ -346,9 +346,6 @@ level = np.ceil((n + 1) * (1 - alpha_cal)) / n
 
 ## 8. Giải Thích Về Coverage 100% và Overfitting
 
-### Người dùng hỏi
-> "Hmm tôi thấy nó cứ sai sai sao á, ở FOLD 2 COMPASS-L 100.0% 3.70 mL, COMPASS-J 100.0% 3.55 mL. Trong huấn luyện mô hình thì làm gì được 100% trừ khi mô hình đó đang bị overfitting"
-
 ### Giải thích
 100% coverage ở 1 fold **KHÔNG phải overfitting** vì 3 lý do:
 
