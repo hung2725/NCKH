@@ -87,7 +87,7 @@ NCKH/
 
 ## 2. Các Vấn Đề Tìm Thấy Trong Code
 
-### 🔴 Vấn đề 1 (CRITICAL): CRC = Split CP — mất tính phân biệt
+### Vấn đề 1 (CRITICAL): CRC = Split CP — mất tính phân biệt
 **File:** `src/conformal/crc.py`
 
 Loss function cho CRC là **indicator function**:
@@ -96,25 +96,23 @@ scores > lam  # {0, 1} — chỉ kiểm tra covered hay không
 ```
 → CRC mathematically identical với Split CP! Khác biệt duy nhất là finite-sample correction (`α-(1-α)/n` vs `⌈(n+1)(1-α)⌉/n`). Kết quả thực nghiệm xác nhận: SCP ≈ 91.6%, CRC ≈ 89.8% — gần như giống hệt nhau.
 
-**Cần sửa:** Dùng bounded loss function có ý nghĩa (ví dụ: normalized error magnitude), không phải indicator.
-
-### 🔴 Vấn đề 2 (CRITICAL): COMPASS-J không dùng shared PCA subspace
+### Vấn đề 2 (CRITICAL): COMPASS-J không dùng shared PCA subspace
 **File:** `src/conformal/compass_j.py`
 
 - Hàm `compute_pca_subspace()` được định nghĩa nhưng **không hề được gọi**
 - Mỗi sample bị perturb dọc theo direction **của chính nó** → local perturbation
 - Đây không phải cách bài báo COMPASS mô tả: cần PCA trên toàn bộ calibration Jacobians → shared subspace V_L → mọi sample dùng chung V_L
 
-### 🟡 Vấn đề 3: COMPASS-L interval rộng hơn Split CP
+### Vấn đề 3: COMPASS-L interval rộng hơn Split CP
 SCP width = 2.17 mL, COMPASS-L width ~3-6 mL → COMPASS đang tệ hơn baseline đơn giản nhất. Nguyên nhân: `b_max=10.0, steps=50` → step quá thô.
 
-### 🟡 Vấn đề 4: Mondrian thất bại với sample nhỏ
+### Vấn đề 4: Mondrian thất bại với sample nhỏ
 HCM group (4 cal samples): coverage = 20%. Fundamental limitation khi n quá nhỏ.
 
-### 🔵 Vấn đề 5: Chưa có correlation analysis với annotator disagreement
+### Vấn đề 5: Chưa có correlation analysis với annotator disagreement
 Research Question 3 chưa được implement.
 
-### 🔵 Vấn đề 6: Mới test 1/4 datasets
+### Vấn đề 6: Mới test 1/4 datasets
 Đề cương có ACDC, LiTS, KiTS, LIDC-IDRI nhưng mới chỉ implement ACDC.
 
 ---
@@ -520,7 +518,7 @@ src/conformal/
 │   ├── compute_pca_subspace()
 │   ├── project_jacobian_to_subspace()    ← MỚI
 │   └── compute_shared_directions()       ← MỚI (có fallback)
-└── crc_fs.py                   # ★ CRC-FS framework [MỚI HOÀN TOÀN]
+└── crc_fs.py                   #  CRC-FS framework [MỚI HOÀN TOÀN]
     ├── logistic_bounded_loss()
     ├── find_lambda_crc_fs()
     ├── calibrate_crc_fs_l() / predict_interval_crc_fs_l()
@@ -543,15 +541,15 @@ results/
 ├── conformal_comparison.csv
 ├── compass_results_lv_volume.csv
 ├── full_comparison_results.csv
-├── crc_fs_results.csv                        # ★ MỚI
-├── crc_fs_fold_summary.csv                   # ★ MỚI
+├── crc_fs_results.csv                        #  MỚI
+├── crc_fs_fold_summary.csv                   #  MỚI
 └── figures/
     ├── group_conditional_coverage.png
     ├── conformal_analysis_lv_ef.png
     ├── compass_vs_scp_comparison.png
     ├── full_comparison_all_methods.png
-    ├── crc_fs_full_comparison.png            # ★ MỚI
-    └── crc_fs_pareto.png                     # ★ MỚI
+    ├── crc_fs_full_comparison.png            #  MỚI
+    └── crc_fs_pareto.png                     #  MỚI
 ```
 
 ### Tổng hợp tất cả thay đổi
@@ -592,15 +590,15 @@ python experiments/run_crc_fs_experiment.py
 
 | File | Nội dung |
 |------|----------|
-| `Nhat_Ky_Nghien_Cuu_CRC_FS.md` | 📄 File này — toàn bộ nhật ký cuộc trò chuyện |
-| `Tai_Lieu_Tham_Khao_2025_2026.md` | 📚 14 bài báo mới nhất 2025-2026 |
-| `CRC_FS_Research_Summary.md` | 📊 Tóm tắt kết quả nghiên cứu (tiếng Anh) |
-| `Topic1_Conformal_Risk_Control.md` | 📋 Đề cương nghiên cứu gốc |
-| `BCC.md` | 📝 Báo cáo kết quả (trước khi có CRC-FS) |
-| `results/crc_fs_results.csv` | 📈 Kết quả 5-fold CV (200 dòng) |
-| `results/crc_fs_fold_summary.csv` | 📊 Tổng hợp per-fold |
-| `results/figures/crc_fs_full_comparison.png` | 📉 Biểu đồ so sánh 8 methods |
-| `results/figures/crc_fs_pareto.png` | 📉 Biểu đồ Pareto (width vs coverage) |
+| `Nhat_Ky_Nghien_Cuu_CRC_FS.md` | File này — toàn bộ nhật ký cuộc trò chuyện |
+| `Tai_Lieu_Tham_Khao_2025_2026.md` |  14 bài báo mới nhất 2025-2026 |
+| `CRC_FS_Research_Summary.md` |  Tóm tắt kết quả nghiên cứu (tiếng Anh) |
+| `Topic1_Conformal_Risk_Control.md` | Đề cương nghiên cứu gốc |
+| `BCC.md` |  Báo cáo kết quả (trước khi có CRC-FS) |
+| `results/crc_fs_results.csv` |  Kết quả 5-fold CV (200 dòng) |
+| `results/crc_fs_fold_summary.csv` |  Tổng hợp per-fold |
+| `results/figures/crc_fs_full_comparison.png` |  Biểu đồ so sánh 8 methods |
+| `results/figures/crc_fs_pareto.png` |  Biểu đồ Pareto (width vs coverage) |
 
 ---
 
