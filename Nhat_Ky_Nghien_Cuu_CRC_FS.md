@@ -569,35 +569,8 @@ results/
 
 ---
 
-## 14. Hướng Phát Triển Tiếp Theo
 
-### Ngắn hạn (cải thiện kết quả hiện tại)
-1. **Tối ưu width CRC-FS:** Dùng MC-Dropout variance hoặc Deep Ensemble std thay vì entropy
-2. **Tối ưu COMPASS grid search:** Dùng binary search thay vì grid với step cố định
-3. **Resample ACDC về cùng kích thước:** Để dùng được shared PCA subspace cho COMPASS-J và CRC-FS-J
-
-### Trung hạn (mở rộng dataset)
-4. **LiTS** — Liver/tumor volume (CT)
-5. **KiTS** — Kidney tumor volume (CT)
-6. **LIDC-IDRI** — Pulmonary nodule diameter + **annotator disagreement analysis** (Research Question 3)
-
-### Dài hạn (đóng góp paper)
-7. **Viết paper:** "CRC-FS: A Unified Framework for Conformal Risk Control in Feature Space for Medical Image Segmentation Metrics"
-8. **Correlation analysis:** Interval width vs inter-annotator variability (dùng LIDC-IDRI 4 annotators)
-9. **Theoretical analysis:** Chứng minh coverage guarantee của adaptive normalization trong feature space
-10. **So sánh với ConVOLT:** Benchmark trên cùng datasets
-11. **Áp dụng gCRC framework:** Dùng generalized CRC từ CPC (2026) cho non-monotonic loss
-
-### Reading list ưu tiên
-1. ⭐ **ConVOLT** (Cheung et al., 2026) — tránh overlap với cùng nhóm tác giả
-2. ⭐ **CRA/CCRA** (Luo & Zhou, 2025) — cải thiện conditional coverage
-3. **CPC/gCRC** (Prinster et al., 2026) — củng cố lý thuyết
-4. **Conformal Risk Training** (Yeh et al., NeurIPS 2025) — end-to-end approach
-5. **CONSIGN** (Viti et al., ICLR 2026) — spatial approach để so sánh
-
----
-
-## 15. Cách Chạy
+## 14. Cách Chạy
 
 ```bash
 # Bước 1: Chạy nnU-Net inference (tạo file .npz)
