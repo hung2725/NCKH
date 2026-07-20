@@ -3,7 +3,6 @@
 **Dataset:** ACDC (100 bệnh nhân, 200 frames, 5 nhóm bệnh) đang test trước data này  
 **Người thực hiện:** T.Hung  
 
-
 ---
 
 ## MỤC LỤC
@@ -96,6 +95,8 @@ scores > lam  # {0, 1} — chỉ kiểm tra covered hay không
 ```
 → CRC mathematically identical với Split CP! Khác biệt duy nhất là finite-sample correction (`α-(1-α)/n` vs `⌈(n+1)(1-α)⌉/n`). Kết quả thực nghiệm xác nhận: SCP ≈ 91.6%, CRC ≈ 89.8% — gần như giống hệt nhau.
 
+**Cần sửa:** Dùng bounded loss function có ý nghĩa (ví dụ: normalized error magnitude), không phải indicator.
+
 ### Vấn đề 2 (CRITICAL): COMPASS-J không dùng shared PCA subspace
 **File:** `src/conformal/compass_j.py`
 
@@ -103,16 +104,16 @@ scores > lam  # {0, 1} — chỉ kiểm tra covered hay không
 - Mỗi sample bị perturb dọc theo direction **của chính nó** → local perturbation
 - Đây không phải cách bài báo COMPASS mô tả: cần PCA trên toàn bộ calibration Jacobians → shared subspace V_L → mọi sample dùng chung V_L
 
-### Vấn đề 3: COMPASS-L interval rộng hơn Split CP
+###  Vấn đề 3: COMPASS-L interval rộng hơn Split CP
 SCP width = 2.17 mL, COMPASS-L width ~3-6 mL → COMPASS đang tệ hơn baseline đơn giản nhất. Nguyên nhân: `b_max=10.0, steps=50` → step quá thô.
 
-### Vấn đề 4: Mondrian thất bại với sample nhỏ
+###  Vấn đề 4: Mondrian thất bại với sample nhỏ
 HCM group (4 cal samples): coverage = 20%. Fundamental limitation khi n quá nhỏ.
 
-### Vấn đề 5: Chưa có correlation analysis với annotator disagreement
+###  Vấn đề 5: Chưa có correlation analysis với annotator disagreement
 Research Question 3 chưa được implement.
 
-### Vấn đề 6: Mới test 1/4 datasets
+###  Vấn đề 6: Mới test 1/4 datasets
 Đề cương có ACDC, LiTS, KiTS, LIDC-IDRI nhưng mới chỉ implement ACDC.
 
 ---
@@ -344,6 +345,9 @@ level = np.ceil((n + 1) * (1 - alpha_cal)) / n
 
 ## 8. Giải Thích Về Coverage 100% và Overfitting
 
+### Người dùng hỏi
+> "Hmm tôi thấy nó cứ sai sai sao á, ở FOLD 2 COMPASS-L 100.0% 3.70 mL, COMPASS-J 100.0% 3.55 mL. Trong huấn luyện mô hình thì làm gì được 100% trừ khi mô hình đó đang bị overfitting"
+
 ### Giải thích
 100% coverage ở 1 fold **KHÔNG phải overfitting** vì 3 lý do:
 
@@ -411,6 +415,9 @@ Split CP tăng từ 89.5% → 91.0% nhờ conservative quantile!
 ---
 
 ## 10. Tìm Kiếm Tài Liệu Tham Khảo 2025-2026
+
+### Người dùng yêu cầu
+> "Ê mà tôi thấy bạn tham khảo những bài báo rất cũ rồi á. Tôi muốn là tìm hiểu các bài báo trong file Topic1_Conformal_Risk_Control và các bài báo liên quan tới bài tôi đang làm phải trong năm 2026 cơ"
 
 ### Phương pháp tìm kiếm
 - Web search: "conformal prediction medical image segmentation 2025 2026"
@@ -518,7 +525,7 @@ src/conformal/
 │   ├── compute_pca_subspace()
 │   ├── project_jacobian_to_subspace()    ← MỚI
 │   └── compute_shared_directions()       ← MỚI (có fallback)
-└── crc_fs.py                   #  CRC-FS framework [MỚI HOÀN TOÀN]
+└── crc_fs.py                   # ★ CRC-FS framework [MỚI HOÀN TOÀN]
     ├── logistic_bounded_loss()
     ├── find_lambda_crc_fs()
     ├── calibrate_crc_fs_l() / predict_interval_crc_fs_l()
@@ -541,15 +548,15 @@ results/
 ├── conformal_comparison.csv
 ├── compass_results_lv_volume.csv
 ├── full_comparison_results.csv
-├── crc_fs_results.csv                        #  MỚI
-├── crc_fs_fold_summary.csv                   #  MỚI
+├── crc_fs_results.csv                        # ★ MỚI
+├── crc_fs_fold_summary.csv                   # ★ MỚI
 └── figures/
     ├── group_conditional_coverage.png
     ├── conformal_analysis_lv_ef.png
     ├── compass_vs_scp_comparison.png
     ├── full_comparison_all_methods.png
-    ├── crc_fs_full_comparison.png            #  MỚI
-    └── crc_fs_pareto.png                     #  MỚI
+    ├── crc_fs_full_comparison.png            # ★ MỚI
+    └── crc_fs_pareto.png                     # ★ MỚI
 ```
 
 ### Tổng hợp tất cả thay đổi
@@ -567,22 +574,230 @@ results/
 
 ---
 
+## 14. Hướng Phát Triển Tiếp Theo
 
-## 14. Cách Chạy
+### Ngắn hạn (cải thiện kết quả hiện tại)
+1. **Tối ưu width CRC-FS:** Dùng MC-Dropout variance hoặc Deep Ensemble std thay vì entropy
+2. **Tối ưu COMPASS grid search:** Dùng binary search thay vì grid với step cố định
+3. **Resample ACDC về cùng kích thước:** Để dùng được shared PCA subspace cho COMPASS-J và CRC-FS-J
 
-```bash
-# Bước 1: Chạy nnU-Net inference (tạo file .npz)
+### Trung hạn (mở rộng dataset)
+4. **LiTS** — Liver/tumor volume (CT)
+5. **KiTS** — Kidney tumor volume (CT)
+6. **LIDC-IDRI** — Pulmonary nodule diameter + **annotator disagreement analysis** (Research Question 3)
+
+### Dài hạn (đóng góp paper)
+7. **Viết paper:** "CRC-FS: A Unified Framework for Conformal Risk Control in Feature Space for Medical Image Segmentation Metrics"
+8. **Correlation analysis:** Interval width vs inter-annotator variability (dùng LIDC-IDRI 4 annotators)
+9. **Theoretical analysis:** Chứng minh coverage guarantee của adaptive normalization trong feature space
+10. **So sánh với ConVOLT:** Benchmark trên cùng datasets
+11. **Áp dụng gCRC framework:** Dùng generalized CRC từ CPC (2026) cho non-monotonic loss
+
+### Reading list ưu tiên
+1. **ConVOLT** (Cheung et al., 2026) — tránh overlap với cùng nhóm tác giả
+2. **CRA/CCRA** (Luo & Zhou, 2025) — cải thiện conditional coverage
+3. **CPC/gCRC** (Prinster et al., 2026) — củng cố lý thuyết
+4. **Conformal Risk Training** (Yeh et al., NeurIPS 2025) — end-to-end approach
+5. **CONSIGN** (Viti et al., ICLR 2026) — spatial approach để so sánh
+
+---
+
+## 15. Cài Đặt & Chạy Chi Tiết
+
+### 15.1 Yêu cầu hệ thống
+
+| Thành phần | Yêu cầu tối thiểu | Đã test trên |
+|------------|-------------------|--------------|
+| OS | Windows 10/11, Linux | Windows 11 (build 26200) |
+| Python | 3.9+ | 3.11.9 |
+| GPU | NVIDIA CUDA 11.8+ | RTX 5070 Laptop 8.5GB VRAM |
+| RAM | 16GB | — |
+| Disk | ~5GB (dataset + model + results) | — |
+
+### 15.2 Cài đặt môi trường Python
+
+```powershell
+# Bước 1: Cài PyTorch với CUDA
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+
+# Bước 2: Cài các thư viện cần thiết
+pip install nnunet              # nnU-Net v1
+pip install nibabel              # Đọc file NIfTI (.nii.gz)
+pip install numpy pandas         # Xử lý dữ liệu
+pip install matplotlib seaborn   # Vẽ biểu đồ
+pip install scikit-learn         # KFold, PCA (TruncatedSVD)
+pip install tqdm                 # Progress bar
+pip install jupyter              # Notebook (tùy chọn)
+```
+
+### 15.3 Cấu hình nnU-Net
+
+```powershell
+# Đặt biến môi trường cho nnU-Net
+[System.Environment]::SetEnvironmentVariable(
+    "nnUNet_raw_data_base",
+    "C:\Users\T.Hung\nnunet_v1\raw",
+    "User"
+)
+[System.Environment]::SetEnvironmentVariable(
+    "nnUNet_preprocessed",
+    "C:\Users\T.Hung\nnunet_v1\preprocessed",
+    "User"
+)
+[System.Environment]::SetEnvironmentVariable(
+    "RESULTS_FOLDER",
+    "C:\Users\T.Hung\nnunet_v1\results",
+    "User"
+)
+
+# Tạo thư mục
+New-Item -ItemType Directory -Force -Path `
+    "C:\Users\T.Hung\nnunet_v1\raw",
+    "C:\Users\T.Hung\nnunet_v1\preprocessed",
+    "C:\Users\T.Hung\nnunet_v1\results" | Out-Null
+```
+
+### 15.4 Tải pretrained model ACDC
+
+```powershell
+# Tải model Task027_ACDC từ Zenodo
+Invoke-WebRequest -Uri "https://zenodo.org/records/4003545/files/Task027_ACDC.zip?download=1" `
+    -OutFile "C:\Users\T.Hung\Task027_ACDC.zip"
+
+# Cài vào nnU-Net
+nnUNet_install_pretrained_model_from_zip "C:\Users\T.Hung\Task027_ACDC.zip"
+```
+
+### 15.5 Tải dataset ACDC
+
+```powershell
+# Tải từ trang chủ ACDC:
+# https://humanheart-project.creatis.insa-lyon.fr/database/#collection/637218c173e9f0047faa00fb
+# 
+# Giải nén vào thư mục: D:\Hoc_Tap\NCKH\data\training\
+# Cấu trúc sau khi giải nén:
+#   data/training/
+#     patient001/
+#       Info.cfg
+#       patient001_4d.nii.gz
+#       patient001_frame01.nii.gz
+#       patient001_frame01_gt.nii.gz
+#       patient001_frame12.nii.gz
+#       patient001_frame12_gt.nii.gz
+#     patient002/
+#     ...
+#     patient100/
+```
+
+### 15.6 Chuẩn bị input cho nnU-Net
+
+```powershell
+# Script run_nnunet_inference.py sẽ tự động copy ảnh ED/ES
+# từ data/training/ sang nnunet_input/ với định dạng nnU-Net:
+#   patientXXX_frameYY_0000.nii.gz
+#
+# KHÔNG cần chạy riêng bước này — script tự làm.
+```
+
+### 15.7 Pipeline đầy đủ
+
+```powershell
+# Đảm bảo đang ở thư mục gốc dự án
+cd D:\Hoc_Tap\NCKH
+
+# ─── BƯỚC 1: Chạy nnU-Net inference ──────────────────────────
+# Tạo file .npz (softmax probabilities) + .nii.gz (masks)
+# Thời gian: ~10-15 phút với GPU
 python experiments/run_nnunet_inference.py --model 3d_fullres --save_npz
 
-# Bước 2: Tính clinical metrics
+# Output:
+#   nnunet_output/
+#     patient001_frame01.nii.gz    (predicted mask)
+#     patient001_frame01.npz       (softmax probabilities)
+#     patient001_frame12.nii.gz
+#     patient001_frame12.npz
+#     ...                          (200 pairs cho 100 bệnh nhân)
+
+# ─── BƯỚC 2: Tính clinical metrics ────────────────────────────
+# So sánh predicted mask vs ground truth mask
+# Tính 7 metrics: LV_EDV, LV_ESV, LV_EF, RV_EDV, RV_ESV, RV_EF, Myo_mass
+# Thời gian: <1 phút
 python experiments/compute_metrics.py
 
-# Bước 3: Chạy baseline comparison (100 trials, 4 methods)
+# Output:
+#   results/acdc_metrics.csv       (100 dòng, 15 cột)
+
+# ─── BƯỚC 3: Baseline comparison ─────────────────────────────
+# So sánh 4 phương pháp: SCP, CRC, Mondrian SCP, Mondrian CRC
+# 100 trials với random split 60/40
+# Thời gian: <1 phút
 python experiments/run_real_experiments.py
 
-# Bước 4: Chạy CRC-FS experiment (5-fold CV, 8 methods)
+# Output:
+#   results/conformal_comparison.csv
+#   results/figures/group_conditional_coverage.png
+#   results/figures/conformal_analysis_lv_ef.png
+
+# ─── BƯỚC 4: CRC-FS full experiment ──────────────────────────
+# So sánh 8 methods với 5-fold CV
+# Thời gian: ~5-10 phút
 python experiments/run_crc_fs_experiment.py
+
+# Output:
+#   results/crc_fs_results.csv              (kết quả từng sample)
+#   results/crc_fs_fold_summary.csv          (tổng hợp per-fold)
+#   results/figures/crc_fs_full_comparison.png
+#   results/figures/crc_fs_pareto.png
 ```
+
+### 15.8 Output mong đợi (Bước 4)
+
+Sau khi chạy `run_crc_fs_experiment.py`, console sẽ hiển thị:
+
+```
+================================================================================
+FINAL RESULTS -- ACDC LV Volume, Target Coverage = 90%
+================================================================================
+Method                                Coverage      Width    vs SCP   Status
+--------------------------------------------------------------------------------
+  Split CP (Baseline)                   91.0%      2.35 mL     +0.0% OK VALID <- BEST
+  CRC (Theorem 2.1)                     89.5%      2.23 mL     -5.1% OK VALID
+  Adaptive SCP                          91.5%      2.55 mL     +8.6% OK VALID
+  Adaptive CRC                          90.0%      2.48 mL     +5.5% OK VALID
+  COMPASS-L (Logit Shift)               92.5%      3.06 mL    +30.3% OK VALID
+  COMPASS-J (Jacobian PCA)              92.5%      3.05 mL    +29.8% OK VALID
+  CRC-FS-L [NEW] (OURS)                 92.5%      5.54 mL   +136.1% OK VALID
+  CRC-FS-J [NEW] (OURS)                 92.5%      4.78 mL   +103.7% OK VALID
+--------------------------------------------------------------------------------
+  [NEW] Best valid method: CRC (Theorem 2.1) (width=2.23 mL)
+================================================================================
+```
+
+### 15.9 Thứ tự chạy khuyến nghị khi bắt đầu từ đầu
+
+```
+1. Cài đặt môi trường (15.2)
+2. Cấu hình nnU-Net (15.3)
+3. Tải pretrained model (15.4)
+4. Tải dataset ACDC (15.5)
+5. Mở notebook khám phá dữ liệu: jupyter notebook notebooks/01_explore_acdc.ipynb
+6. Chạy inference (Bước 1)
+7. Tính metrics (Bước 2)
+8. Chạy experiment (Bước 4) — Bước 3 có thể bỏ qua nếu chỉ cần kết quả CRC-FS
+```
+
+### 15.10 Troubleshooting
+
+| Lỗi | Nguyên nhân | Cách sửa |
+|-----|-------------|----------|
+| `No .npz files found` | Chưa chạy inference với `--save_npz` | Chạy Bước 1 với flag `--save_npz` |
+| `CUDA out of memory` | VRAM không đủ | Dùng `--model 2d` thay vì `3d_fullres` |
+| `ModuleNotFoundError: nnunet` | Chưa cài nnU-Net | `pip install nnunet` |
+| `No module named 'src'` | Sai working directory | `cd D:\Hoc_Tap\NCKH` trước khi chạy |
+| `FileNotFoundError: acdc_metrics.csv` | Chưa chạy Bước 2 | Chạy `python experiments/compute_metrics.py` |
+| `UnicodeEncodeError` (★, ✓, ✗) | Windows CP1252 | Đã fix — tất cả unicode đã thay bằng ASCII |
+| `KeyError: 'lambda_hat'` | Code cũ | Đã fix — dùng `q_hat` (SCP primary) |
+| `all input arrays must have the same shape` | Ảnh khác kích thước | Đã fix — fallback per-sample direction |
 
 ---
 
@@ -590,24 +805,25 @@ python experiments/run_crc_fs_experiment.py
 
 | File | Nội dung |
 |------|----------|
-| `Nhat_Ky_Nghien_Cuu_CRC_FS.md` | File này — toàn bộ nhật ký cuộc trò chuyện |
-| `Tai_Lieu_Tham_Khao_2025_2026.md` |  14 bài báo mới nhất 2025-2026 |
-| `CRC_FS_Research_Summary.md` |  Tóm tắt kết quả nghiên cứu (tiếng Anh) |
-| `Topic1_Conformal_Risk_Control.md` | Đề cương nghiên cứu gốc |
-| `BCC.md` |  Báo cáo kết quả (trước khi có CRC-FS) |
-| `results/crc_fs_results.csv` |  Kết quả 5-fold CV (200 dòng) |
-| `results/crc_fs_fold_summary.csv` |  Tổng hợp per-fold |
-| `results/figures/crc_fs_full_comparison.png` |  Biểu đồ so sánh 8 methods |
-| `results/figures/crc_fs_pareto.png` |  Biểu đồ Pareto (width vs coverage) |
+| `Nhat_Ky_Nghien_Cuu_CRC_FS.md` | 📄 File này — toàn bộ nhật ký cuộc trò chuyện |
+| `Tai_Lieu_Tham_Khao_2025_2026.md` | 📚 14 bài báo mới nhất 2025-2026 |
+| `CRC_FS_Research_Summary.md` | 📊 Tóm tắt kết quả nghiên cứu (tiếng Anh) |
+| `Topic1_Conformal_Risk_Control.md` | 📋 Đề cương nghiên cứu gốc |
+| `BCC.md` | 📝 Báo cáo kết quả (trước khi có CRC-FS) |
+| `results/crc_fs_results.csv` | 📈 Kết quả 5-fold CV (200 dòng) |
+| `results/crc_fs_fold_summary.csv` | 📊 Tổng hợp per-fold |
+| `results/figures/crc_fs_full_comparison.png` | 📉 Biểu đồ so sánh 8 methods |
+| `results/figures/crc_fs_pareto.png` | 📉 Biểu đồ Pareto (width vs coverage) |
 
 ---
 
 ## Tài Liệu Tham Khảo Đầy Đủ
 
 ### Bài báo gốc trong đề cương
-1. Angelopoulos & Bates — *A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification* (2023)
-2. Angelopoulos et al. — *Conformal Risk Control* (ICLR 2024)
-3. Cheung et al. — *COMPASS: Robust Feature Conformal Prediction for Medical Segmentation Metrics* (ICLR 2026)
+1. Angelopoulos & Bates — *A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification* (introductory tutorial).
+2. Angelopoulos et al. — *Conformal Risk Control* (ICLR 2024).
+3. COMPASS — *Robust Feature Conformal Prediction for Medical Segmentation Metrics* (arXiv:2509.22240, ICLR 2026).
+
 
 ### Bài báo mới 2025-2026
 4. Cheung et al. — *ConVOLT: Efficient Conformal Volumetry for Template-Based Segmentation* (arXiv:2603.00798, 2026)
@@ -623,4 +839,7 @@ python experiments/run_crc_fs_experiment.py
 14. CURVAS Challenge — *Multi-Rater Volume Assessment* (Computers in Biology and Medicine, 2025)
 15. Badjie et al. — *Semantic Segmentation with Conformal Risk Guarantees* (AEiC 2026)
 16. Loaiza-Ganem et al. — *Conf-Gen: Conformal for Generative Models* (ICML 2026)
+
+
+
 
