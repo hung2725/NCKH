@@ -307,11 +307,6 @@ NameError: name 'n' is not defined
 ---
 
 ## 7. Tối Ưu Coverage: Sửa Công Thức Quantile
-
-### Người dùng yêu cầu
-> "Giờ làm gì để cho bài toán này tất cả đều đạt trên 90% được là tốt"
-> (Chọn phương án) "Sửa công thức quantile + alpha"
-
 ### Vấn đề
 Trước khi sửa: Split CP đạt 89.5% (sát 90% nhưng chưa đủ). Với n_cal=160, biến động thống kê tự nhiên khiến coverage dao động ±2-3%.
 
@@ -343,10 +338,7 @@ level = np.ceil((n + 1) * (1 - alpha_cal)) / n
 
 ---
 
-## 8. Giải Thích Về Coverage 100% và Overfitting
-
-### Người dùng hỏi
-> "Hmm tôi thấy nó cứ sai sai sao á, ở FOLD 2 COMPASS-L 100.0% 3.70 mL, COMPASS-J 100.0% 3.55 mL. Trong huấn luyện mô hình thì làm gì được 100% trừ khi mô hình đó đang bị overfitting"
+## 8. Giải Thích Về Coverage 100% và Overfittingghg hfbcnvghfhfcbdv nhfcdbvn fdhc bvx
 
 ### Giải thích
 100% coverage ở 1 fold **KHÔNG phải overfitting** vì 3 lý do:
@@ -525,7 +517,7 @@ src/conformal/
 │   ├── compute_pca_subspace()
 │   ├── project_jacobian_to_subspace()    ← MỚI
 │   └── compute_shared_directions()       ← MỚI (có fallback)
-└── crc_fs.py                   # ★ CRC-FS framework [MỚI HOÀN TOÀN]
+└── crc_fs.py                   #  CRC-FS framework [MỚI HOÀN TOÀN]
     ├── logistic_bounded_loss()
     ├── find_lambda_crc_fs()
     ├── calibrate_crc_fs_l() / predict_interval_crc_fs_l()
@@ -805,15 +797,15 @@ Method                                Coverage      Width    vs SCP   Status
 
 | File | Nội dung |
 |------|----------|
-| `Nhat_Ky_Nghien_Cuu_CRC_FS.md` | 📄 File này — toàn bộ nhật ký cuộc trò chuyện |
-| `Tai_Lieu_Tham_Khao_2025_2026.md` | 📚 14 bài báo mới nhất 2025-2026 |
-| `CRC_FS_Research_Summary.md` | 📊 Tóm tắt kết quả nghiên cứu (tiếng Anh) |
-| `Topic1_Conformal_Risk_Control.md` | 📋 Đề cương nghiên cứu gốc |
-| `BCC.md` | 📝 Báo cáo kết quả (trước khi có CRC-FS) |
-| `results/crc_fs_results.csv` | 📈 Kết quả 5-fold CV (200 dòng) |
-| `results/crc_fs_fold_summary.csv` | 📊 Tổng hợp per-fold |
-| `results/figures/crc_fs_full_comparison.png` | 📉 Biểu đồ so sánh 8 methods |
-| `results/figures/crc_fs_pareto.png` | 📉 Biểu đồ Pareto (width vs coverage) |
+| `Nhat_Ky_Nghien_Cuu_CRC_FS.md` | File này — toàn bộ nhật ký cuộc trò chuyện |
+| `Tai_Lieu_Tham_Khao_2025_2026.md` |14 bài báo mới nhất 2025-2026 |
+| `CRC_FS_Research_Summary.md` | Tóm tắt kết quả nghiên cứu (tiếng Anh) |
+| `Topic1_Conformal_Risk_Control.md` | Đề cương nghiên cứu gốc |
+| `BCC.md` | Báo cáo kết quả (trước khi có CRC-FS) |
+| `results/crc_fs_results.csv` | Kết quả 5-fold CV (200 dòng) |
+| `results/crc_fs_fold_summary.csv` | Tổng hợp per-fold |
+| `results/figures/crc_fs_full_comparison.png` | Biểu đồ so sánh 8 methods |
+| `results/figures/crc_fs_pareto.png` | Biểu đồ Pareto (width vs coverage) |
 
 ---
 
