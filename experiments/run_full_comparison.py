@@ -48,7 +48,7 @@ from src.conformal.compass import (
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 WORKSPACE_DIR = Path("D:/Hoc_Tap/NCKH")
-DATA_DIR      = WORKSPACE_DIR / "data/training"
+DATA_DIR      = WORKSPACE_DIR / "data_ACDC/training"
 PRED_DIR      = WORKSPACE_DIR / "nnunet_output"
 RESULTS_DIR   = WORKSPACE_DIR / "results"
 FIG_DIR       = RESULTS_DIR / "figures"

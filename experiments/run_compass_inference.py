@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.conformal.compass import compass_l_score, calibrate_compass, predict_interval_compass
 
 WORKSPACE_DIR = Path("D:/Hoc_Tap/NCKH")
-DATA_DIR = WORKSPACE_DIR / "data/training"
+DATA_DIR = WORKSPACE_DIR / "data_ACDC/training"
 PRED_DIR = WORKSPACE_DIR / "nnunet_output"
 
 # Class label for Left Ventricle in ACDC

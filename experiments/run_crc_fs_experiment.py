@@ -58,9 +58,9 @@ from src.conformal.crc_fs import (
     predict_interval_crc_fs_j,
 )
 
-# ─── Config ───────────────────────────────────────────────────────────────────
+#  Config 
 WORKSPACE_DIR = Path("D:/Hoc_Tap/NCKH")
-DATA_DIR      = WORKSPACE_DIR / "data/training"
+DATA_DIR      = WORKSPACE_DIR / "data_ACDC/training"
 PRED_DIR      = WORKSPACE_DIR / "nnunet_output"
 RESULTS_DIR   = WORKSPACE_DIR / "results"
 FIG_DIR       = RESULTS_DIR / "figures"
@@ -74,7 +74,7 @@ print(f"Using device: {DEVICE}")
 print(f"Target coverage: {(1-ALPHA)*100:.0f}%")
 
 
-# ─── 1. Load data ─────────────────────────────────────────────────────────────
+#  1. Load data 
 
 def load_all_samples():
     """Load all .npz + .nii.gz GT pairs."""
@@ -139,7 +139,7 @@ def load_all_samples():
     return samples
 
 
-# ─── 2. Cross-Validation ──────────────────────────────────────────────────────
+#  2. Cross-Validation 
 
 def run_kfold(samples):
     """5-fold CV comparing all 8 methods."""
@@ -174,27 +174,27 @@ def run_kfold(samples):
         cal_probs  = [s['probs'] for s in cal_samples]
         cal_metric_fns = [s['metric_fn'] for s in cal_samples]
 
-        # ── SCP ────────────────────────────────────────────────────────────
+        #  SCP 
         scp = calibrate(cal_true, cal_pred, ALPHA, mode='abs')
         lo_scp, up_scp = predict_interval(test_pred, scp['q_hat'], mode='abs')
         ev_scp = evaluate_coverage(test_true, lo_scp, up_scp)
 
-        # ── CRC ────────────────────────────────────────────────────────────
+        #  CRC 
         crc = find_lambda(cal_true, cal_pred, ALPHA, mode='abs', n_grid=1000)
         lo_crc, up_crc = predict_interval(test_pred, crc['lambda'], mode='abs')
         ev_crc = evaluate_coverage(test_true, lo_crc, up_crc)
 
-        # ── ASCP (Adaptive SCP) ────────────────────────────────────────────
+        #  ASCP (Adaptive SCP) 
         ascp = calibrate_normalized(cal_true, cal_pred, cal_sigmas, ALPHA)
         lo_ascp, up_ascp = predict_interval_normalized(test_pred, test_sigmas, ascp['q_hat'])
         ev_ascp = evaluate_coverage(test_true, lo_ascp, up_ascp)
 
-        # ── ACRC (Adaptive CRC) ────────────────────────────────────────────
+        #  ACRC (Adaptive CRC) 
         acrc = find_lambda_adaptive(cal_true, cal_pred, cal_sigmas, ALPHA)
         lo_acrc, up_acrc = predict_interval_normalized(test_pred, test_sigmas, acrc['lambda'])
         ev_acrc = evaluate_coverage(test_true, lo_acrc, up_acrc)
 
-        # ── COMPASS-L ──────────────────────────────────────────────────────
+        #  COMPASS-L 
         print("  Calibrating COMPASS-L...", flush=True)
         scores_l = []
         for i in tqdm(range(n_cal), desc="  COMPASS-L cal", leave=False):
@@ -211,7 +211,7 @@ def run_kfold(samples):
             wids_l.append(hi - lo)
         ev_cl = {'coverage': float(np.mean(covs_l)), 'mean_width': float(np.mean(wids_l))}
 
-        # ── COMPASS-J (FIXED: shared PCA subspace) ─────────────────────────
+        #  COMPASS-J (FIXED: shared PCA subspace) ─
         print("  Calibrating COMPASS-J (shared PCA subspace)...", flush=True)
         V_L_j, cal_dirs_j = compute_shared_directions(
             cal_probs, TARGET_CLASS,
@@ -245,7 +245,7 @@ def run_kfold(samples):
             wids_j.append(hi - lo)
         ev_cj = {'coverage': float(np.mean(covs_j)), 'mean_width': float(np.mean(wids_j))}
 
-        # ── CRC-FS-L [NEW] (OUR CONTRIBUTION) ─────────────────────────────────
+        #  CRC-FS-L [NEW] (OUR CONTRIBUTION) 
         print("  Calibrating CRC-FS-L [NEW]...", flush=True)
         crcfsl = calibrate_crc_fs_l(
             cal_probs, cal_true, cal_sigmas,
@@ -254,17 +254,17 @@ def run_kfold(samples):
         )
         covs_fsl, wids_fsl = [], []
         q_l = crcfsl['q_hat']
+        med_l = crcfsl['median_sigma']
         for s in test_samples:
             lo, hi = predict_interval_crc_fs_l(
-                s['probs'], q_l, s['sigma'],
-                crcfsl['median_sigma'],
+                s['probs'], q_l, s['sigma'], med_l,
                 TARGET_CLASS, s['metric_fn'],
             )
             covs_fsl.append(1.0 if lo <= s['y_true'] <= hi else 0.0)
             wids_fsl.append(hi - lo)
         ev_fsl = {'coverage': float(np.mean(covs_fsl)), 'mean_width': float(np.mean(wids_fsl))}
 
-        # ── CRC-FS-J [NEW] (OUR CONTRIBUTION) ─────────────────────────────────
+        #  CRC-FS-J [NEW] (OUR CONTRIBUTION) 
         print("  Calibrating CRC-FS-J [NEW]...", flush=True)
         crcfsj = calibrate_crc_fs_j(
             cal_probs, cal_true, cal_sigmas, cal_voxel_vols,
@@ -274,10 +274,10 @@ def run_kfold(samples):
         covs_fsj, wids_fsj = [], []
         V_L_fsj = crcfsj.get('V_L')
         q_j = crcfsj['q_hat']
+        med_j = crcfsj['median_sigma']
         for s in test_samples:
             lo, hi = predict_interval_crc_fs_j(
-                s['probs'], q_j, s['sigma'],
-                crcfsj['median_sigma'],
+                s['probs'], q_j, s['sigma'], med_j,
                 TARGET_CLASS, s['metric_fn'], s['voxel_vol'],
                 V_L_fsj,
             )
@@ -285,7 +285,7 @@ def run_kfold(samples):
             wids_fsj.append(hi - lo)
         ev_fsj = {'coverage': float(np.mean(covs_fsj)), 'mean_width': float(np.mean(wids_fsj))}
 
-        # ── Collect per-sample results ─────────────────────────────────────
+        #  Collect per-sample results ─
         for i, s in enumerate(test_samples):
             all_results.append({
                 'fold': fold_idx + 1,
@@ -319,7 +319,7 @@ def run_kfold(samples):
                 'crcfsj_width': wids_fsj[i],
             })
 
-        # ── Fold summary ───────────────────────────────────────────────────
+        #  Fold summary 
         t_elapsed = time() - t_start
         fold_summaries.append({
             'fold': fold_idx + 1,
@@ -346,13 +346,13 @@ def run_kfold(samples):
             ('CRC-FS-L [NEW]', ev_fsl['coverage'], ev_fsl['mean_width']),
             ('CRC-FS-J [NEW]', ev_fsj['coverage'], ev_fsj['mean_width']),
         ]:
-            marker = ' OK' if cov >= (1-ALPHA) - 0.02 else ' X'
+            marker = ' ' if cov >= (1-ALPHA) - 0.02 else ' '
             print(f"  {name:<16} {cov*100:>9.1f}% {wid:>9.2f} mL{marker}")
 
     return pd.DataFrame(all_results), pd.DataFrame(fold_summaries)
 
 
-# ─── 3. Summarize ─────────────────────────────────────────────────────────────
+#  3. Summarize 
 
 def print_summary(df: pd.DataFrame, fold_df: pd.DataFrame):
     """In bảng tổng hợp + phân tích thống kê."""
@@ -395,8 +395,8 @@ def print_summary(df: pd.DataFrame, fold_df: pd.DataFrame):
             fold_key_wid = f'{key}_wid' if f'{key}_wid' in fold_df.columns else key
 
         diff = (wid - scp_width) / scp_width * 100
-        status = 'OK VALID' if cov >= (1-ALPHA)*100 - 1 else 'X LOW'
-        marker = ' <- BEST' if wid < best_wid and cov >= (1-ALPHA)*100 - 1 else ''
+        status = 'VALID' if cov >= (1-ALPHA)*100 - 1 else 'LOW'
+        marker = 'BEST' if wid < best_wid and cov >= (1-ALPHA)*100 - 1 else ''
         if wid < best_wid and cov >= (1-ALPHA)*100 - 1:
             best_wid = wid
             best_name = name
@@ -426,14 +426,14 @@ def print_summary(df: pd.DataFrame, fold_df: pd.DataFrame):
         mean_improve_cl  = float(np.mean(delta_cl))
 
         print(f"  {our_name} vs Split CP:  {pct_better_scp:.0f}% samples narrower, "
-              f"mean Deltawidth = {mean_improve_scp:+.2f} mL")
+              f"mean Δwidth = {mean_improve_scp:+.2f} mL")
         print(f"  {our_name} vs COMPASS-L: {pct_better_cl:.0f}% samples narrower, "
-              f"mean Deltawidth = {mean_improve_cl:+.2f} mL")
+              f"mean Δwidth = {mean_improve_cl:+.2f} mL")
 
     return valid_methods
 
 
-# ─── 4. Plot ──────────────────────────────────────────────────────────────────
+#  4. Plot 
 
 def plot_comparison(df: pd.DataFrame):
     """Biểu đồ so sánh 8 methods."""
@@ -509,7 +509,7 @@ def plot_comparison(df: pd.DataFrame):
     plt.savefig(str(out_path), dpi=300, bbox_inches='tight')
     print(f"\nFigure saved -> {out_path}")
 
-    # ── Extra: Width vs Coverage scatter ───────────────────────────────────
+    #  Extra: Width vs Coverage scatter 
     fig2, ax = plt.subplots(figsize=(10, 7))
 
     for key, name, color in methods:
@@ -523,8 +523,8 @@ def plot_comparison(df: pd.DataFrame):
 
     ax.axhline((1-ALPHA)*100, color='red', linestyle='--', linewidth=1.5,
                label=f'Target {(1-ALPHA)*100:.0f}%')
-    ax.set_xlabel('Average Width (mL) — Smaller -> Better', fontsize=12)
-    ax.set_ylabel('Coverage (%) — Higher -> Better', fontsize=12)
+    ax.set_xlabel('Average Width (mL) — Smaller → Better', fontsize=12)
+    ax.set_ylabel('Coverage (%) — Higher → Better', fontsize=12)
     ax.set_title('CRC-FS: Optimal Point = Top-Left Corner\n(Best Coverage + Smallest Width)',
                  fontsize=12, fontweight='bold')
     ax.legend(fontsize=9, loc='upper left')
@@ -532,7 +532,7 @@ def plot_comparison(df: pd.DataFrame):
 
     # Add Pareto frontier arrow
     best_idx = np.argmin(wids)
-    ax.annotate('<- OPTIMAL', xy=(wids[best_idx], covs[best_idx]),
+    ax.annotate('← OPTIMAL', xy=(wids[best_idx], covs[best_idx]),
                 xytext=(wids[best_idx] + max(wids)*0.1, covs[best_idx] + 2),
                 fontsize=10, fontweight='bold', color='#27AE60',
                 arrowprops=dict(arrowstyle='->', color='#27AE60', lw=1.5))
@@ -543,30 +543,21 @@ def plot_comparison(df: pd.DataFrame):
     print(f"Figure saved -> {out_path2}")
 
 
-# ─── Main ─────────────────────────────────────────────────────────────────────
-
+# Main
 if __name__ == "__main__":
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-
     # 1. Load
     samples = load_all_samples()
-
     # 2. K-Fold CV
     df, fold_df = run_kfold(samples)
-
-    # 3. Save CSV
     out_csv = RESULTS_DIR / "crc_fs_results.csv"
     df.to_csv(str(out_csv), index=False)
     print(f"\nCSV saved -> {out_csv}")
-
     fold_csv = RESULTS_DIR / "crc_fs_fold_summary.csv"
     fold_df.to_csv(str(fold_csv), index=False)
-
     # 4. Summary
     print_summary(df, fold_df)
-
     # 5. Plot
     plot_comparison(df)
-
-    print("\nOK Experiment complete!")
+    print("\n Experiment complete!")

@@ -57,7 +57,7 @@ from nnunet.inference.predict import predict_from_folder
 
 # Cấu hình đường dẫn
 WORKSPACE_DIR = Path("D:/Hoc_Tap/NCKH")
-DATA_DIR = WORKSPACE_DIR / "data/training"
+DATA_DIR = WORKSPACE_DIR / "data_ACDC/training"
 INPUT_DIR = WORKSPACE_DIR / "nnunet_input"
 OUTPUT_DIR = WORKSPACE_DIR / "nnunet_output"
 NNUNET_DATA_DIR = WORKSPACE_DIR / "nnunet_data"

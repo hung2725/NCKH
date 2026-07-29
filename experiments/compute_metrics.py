@@ -10,7 +10,7 @@ from src.data.acdc_dataset import ACDCDataset, load_nifti, compute_volume_ml, co
 
 # Cấu hình đường dẫn
 WORKSPACE_DIR = Path("D:/Hoc_Tap/NCKH")
-DATA_DIR = WORKSPACE_DIR / "data/training"
+DATA_DIR = WORKSPACE_DIR / "data_ACDC/training"
 OUTPUT_DIR = WORKSPACE_DIR / "nnunet_output"
 RESULTS_DIR = WORKSPACE_DIR / "results"
 

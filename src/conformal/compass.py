@@ -47,18 +47,51 @@ def compass_l_score(probs: torch.Tensor, y_true: float, target_class: int, metri
     """
     # We will search over beta in [0, b_max].
     betas = np.linspace(0, b_max, steps)
-    
+
     for beta in betas:
         m_neg = compute_metric_for_b(probs, -beta, target_class, metric_fn)
         m_pos = compute_metric_for_b(probs, beta, target_class, metric_fn)
-        
+
         lower = min(m_neg, m_pos)
         upper = max(m_neg, m_pos)
-        
+
         if lower <= y_true <= upper:
             return float(beta)
-            
+
     return float(b_max)
+
+
+def compass_l_score_binary(probs: torch.Tensor, y_true: float, target_class: int,
+                            metric_fn: Callable, b_max: float = 5.0,
+                            n_iter: int = 10) -> float:
+    """
+    COMPASS score dung BINARY SEARCH — cung do chinh xac, nhanh gap 10x.
+
+    Vi property "y_true in [m(-b), m(+b)]" la monotonic trong b,
+    nen binary search tim duoc beta_min chinh xac chi sau n_iter lan.
+
+    Voi n_iter=10: precision = b_max / 2^10 = 5.0/1024 = 0.005
+    (Tuong duong grid search 1024 steps!)
+
+    So sanh:
+      Grid search steps=100: 200 compute_metric_for_b calls
+      Binary n_iter=10:     ~40 compute_metric_for_b calls
+    """
+    # Check b=0 first
+    m0 = compute_metric_for_b(probs, 0.0, target_class, metric_fn)
+    if abs(m0 - y_true) < 1e-9:
+        return 0.0
+
+    lo, hi = 0.0, b_max
+    for _ in range(n_iter):
+        mid = (lo + hi) / 2.0
+        m_neg = compute_metric_for_b(probs, -mid, target_class, metric_fn)
+        m_pos = compute_metric_for_b(probs,  mid, target_class, metric_fn)
+        if min(m_neg, m_pos) <= y_true <= max(m_neg, m_pos):
+            hi = mid  # covered -> try smaller beta
+        else:
+            lo = mid  # not covered -> need larger beta
+    return float(hi)
 
 def calibrate_compass(scores: Union[np.ndarray, list], alpha: float) -> float:
     """
