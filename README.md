@@ -257,18 +257,6 @@ PREDICTION:
 | Loss | Quantile | Logistic R/(R+λ) ∈ [0,1] |
 | Width | Adaptive (× sigma) | — |
 
-### 6.4 Tính mới
-
-| | Split CP | CRC Paper | COMPASS | **CRC-FS** |
-|---|---|---|---|---|
-| Feature perturbation | ❌ | ❌ | ✅ | ✅ |
-| Finite-sample risk guarantee | ❌ | ✅ | ❌ | ✅ |
-| Adaptive per-sample width | ❌ | ❌ | ❌ | ✅ |
-| Logistic bounded loss ≠ indicator | ❌ | ❌ | ❌ | ✅ |
-| Dual calibration (SCP + CRC) | ❌ | ❌ | ❌ | ✅ |
-
----
-
 ## 7. Quá Trình Phát Triển & Các Lỗi Đã Sửa
 
 ### 7.1 Các vấn đề phát hiện & sửa
